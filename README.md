@@ -8,6 +8,12 @@ Mumzworld already shows three life-stage sections as static banners. A mom has t
 
 ---
 
+## 🎥 Demo
+
+[▶️ Watch 3-min Demo](https://www.loom.com/share/4644b76613c74f0cbef0ac042b0b97a8)
+
+---
+
 ## 🚀 Setup & Run (under 5 minutes)
 
 ### Prerequisites
@@ -139,12 +145,6 @@ Full evaluation report with 12 test cases, RAG retrieval proof, and honest failu
 **What worked:** JSON mode in Gemini eliminated most parse failures. Pydantic caught the rest.
 
 **What didn't:** Getting Arabic to read like GCC conversational copy rather than formal MSA required multiple prompt rewrites and is still imperfect.
-
----
-
-## 🎥 Demo
-
-[Add Loom link here — 3 minutes, 5 profiles including one uncertainty case]
 
 ---
 
