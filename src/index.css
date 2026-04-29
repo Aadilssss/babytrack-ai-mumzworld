@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Noto Sans Arabic", serif;
+  
+  --color-mumz-pink: #E91E8C;
+  --color-mumz-purple: #92278F;
+  --color-mumz-light: #FDF2F8;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+.ar {
+  font-family: var(--font-arabic);
+  direction: rtl;
+}
+

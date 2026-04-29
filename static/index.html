@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mumzworld BabyTrack AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .mumz-pink { color: #E91E8C; }
+        .bg-mumz-pink { background-color: #E91E8C; }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <header class="bg-white border-b p-4 shadow-sm">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold bg-mumz-pink text-white px-3 py-1 rounded">M</h1>
+            <span class="text-sm font-bold mumz-pink border border-pink-200 px-3 py-1 rounded-full">BabyTrack AI Demo</span>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-6">
+        <div class="bg-white p-6 rounded-2xl shadow-md mb-8 flex gap-4 items-end">
+            <div class="flex-1">
+                <label class="block text-sm font-bold text-slate-500 mb-2">SELECT MOM JOURNEY</label>
+                <select id="momSelect" class="w-full p-3 bg-slate-100 rounded-lg outline-none border-none"></select>
+            </div>
+            <button id="analyzeBtn" class="bg-mumz-pink text-white font-bold py-3 px-8 rounded-lg hover:opacity-90 transition">Analyze Journey</button>
+        </div>
+
+        <div id="loading" class="hidden py-20 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+            <p class="text-slate-500">AI is detecting developmental stage...</p>
+        </div>
+
+        <div id="results" class="hidden space-y-8">
+            <div id="hero" class="bg-gradient-to-r from-pink-600 to-purple-700 p-8 rounded-3xl text-white shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <span id="stageBadge" class="bg-white text-pink-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest"></span>
+                    <span id="confidence" class="text-xs uppercase font-bold text-white/70">Confidence: <span id="confVal"></span></span>
+                </div>
+                <h2 id="stageTitle" class="text-4xl font-bold mb-2"></h2>
+                <p id="reason" class="text-white/80 italic"></p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-slate-100 p-6 rounded-2xl border-l-4 border-pink-500">
+                    <span class="text-[10px] font-bold text-slate-400 tracking-widest">ENGLISH ADVICE</span>
+                    <p id="msgEn" class="text-slate-700 mt-2 leading-relaxed"></p>
+                </div>
+                <div class="bg-slate-100 p-6 rounded-2xl border-r-4 border-purple-500 text-right">
+                    <span class="text-[10px] font-bold text-slate-400 tracking-widest">نصيحة ممزورلد</span>
+                    <p id="msgAr" class="text-slate-700 mt-2 text-xl leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="text-red-500 text-2xl">⚠</span> REPLENISHMENT ALERTS</h3>
+                <div id="runningLow" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="mumz-pink text-2xl">✨</span> NEXT STEP RECOMMENDATIONS</h3>
+                <div id="recs" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = ""; // Relative if served by same backend
+        const momSelect = document.getElementById('momSelect');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const results = document.getElementById('results');
+        const loading = document.getElementById('loading');
+
+        async function init() {
+            const res = await fetch('/api/moms');
+            const data = await res.json();
+            data.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                momSelect.appendChild(opt);
+            });
+        }
+
+        analyzeBtn.onclick = async () => {
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            
+            try {
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mom_index: parseInt(momSelect.value) })
+                });
+                const data = await res.json();
+                render(data);
+            } catch (e) {
+                alert("Error: " + e);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        };
+
+        function render(data) {
+            document.getElementById('stageBadge').textContent = data.baby_stage;
+            document.getElementById('stageTitle').textContent = data.baby_stage.replace(/_/g, ' ').toUpperCase();
+            document.getElementById('confVal').textContent = data.stage_confidence;
+            document.getElementById('reason').textContent = data.confidence_reason;
+            document.getElementById('msgEn').textContent = data.message_en;
+            document.getElementById('msgAr').textContent = data.message_ar;
+
+            const low = document.getElementById('runningLow');
+            low.innerHTML = data.running_low.map(i => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-red-50">
+                    <div class="text-[10px] text-red-400 font-bold uppercase">${i.urgency} URGENCY</div>
+                    <div class="font-bold text-slate-800">${i.product}</div>
+                    <div class="text-xs text-slate-400">~${i.days_remaining} days left</div>
+                </div>
+            `).join('');
+
+            const recs = document.getElementById('recs');
+            recs.innerHTML = data.recommendations.map(r => `
+                <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 border border-slate-100">
+                    <div class="w-12 h-12 bg-pink-50 rounded-lg flex items-center justify-center text-pink-500 font-bold">🛒</div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase">${r.category}</div>
+                        <div class="font-bold text-slate-800">${r.product}</div>
+                        <div class="text-xs text-slate-500">${r.reason}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            results.classList.remove('hidden');
+        }
+
+        init();
+    </script>
+</body>
+</html>
